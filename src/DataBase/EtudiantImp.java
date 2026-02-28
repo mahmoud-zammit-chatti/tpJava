@@ -19,7 +19,7 @@ public class EtudiantImp implements EtudiantDAO{
     public int insertEtudiant(int cin, String nom, String prenom, double moyenne) {
         Statement st = null;
         int a = 0;
-        String req = "INSERT INTO etudiant(cin, nom, prenom,moyenne) VALUES (123, 'Hassan', 'MohamedHassan',18)";
+        String req = "INSERT INTO etudiant(cin, nom, prenom,moyenne) VALUES (cin, nom, prenom,moyenne)";
 
 
         try {
@@ -28,11 +28,8 @@ public class EtudiantImp implements EtudiantDAO{
             System.out.println(e.getMessage());
         }
         if (st != null) {
-
-
             try {
                 a = st.executeUpdate(req);
-
             } catch (SQLException e) {
                 System.out.println("erreur:" + e.getMessage());
                 return -1;
@@ -124,7 +121,7 @@ public class EtudiantImp implements EtudiantDAO{
     }
 
     public void main(String[] args){
-
+    this.insertEtudiant(1,"hassan","mohamed",18);
     }
 }
 
