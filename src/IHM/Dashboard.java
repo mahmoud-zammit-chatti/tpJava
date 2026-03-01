@@ -1,5 +1,6 @@
 package IHM;
 
+import IHM.gestionEtudiant.GestionEtudiant;
 import IHM.gestionProfil.GestionProfil;
 import IHM.menu.MenuBar;
 import com.cvgenerator.ui.MainFrame;
@@ -28,6 +29,8 @@ public class Dashboard extends JFrame {
         menuBar.grid.addActionListener(new EcouteurMenu());
         menuBar.cv.addActionListener(new EcouteurMenu());
         menuBar.gestion.addActionListener(new EcouteurMenu());
+
+        menuBar.etudiant.addActionListener(new EcouteurMenu());
 
         desktopPane = new JDesktopPane();
         this.setContentPane(desktopPane);
@@ -69,6 +72,12 @@ public class Dashboard extends JFrame {
                 desktopPane.add(gp);
                 gp.setSize(1100,800);
                 gp.setVisible(true);
+            }
+            if(e.getSource()==menuBar.etudiant){
+                GestionEtudiant ge = new GestionEtudiant();
+                desktopPane.add(ge);
+                ge.setSize(1100,800);
+                ge.setVisible(true);
             }
         }
     }

@@ -19,7 +19,7 @@ public class EtudiantImp implements EtudiantDAO{
     public int insertEtudiant(int cin, String nom, String prenom, double moyenne) {
         Statement st = null;
         int a = 0;
-        String req = "INSERT INTO etudiant(cin, nom, prenom,moyenne) VALUES (cin, nom, prenom,moyenne)";
+        String req = "INSERT INTO etudiant(cin, nom, prenom, moyenne) VALUES ("+cin+", '"+nom+"', '"+prenom+"', "+moyenne+")";
 
 
         try {
@@ -53,6 +53,23 @@ public class EtudiantImp implements EtudiantDAO{
             return -1;
         }
 
+
+        return a;
+    }
+
+    @Override
+    public int deleteAllEtudiants() {
+        Statement st = null;
+        int a = 0;
+        String req = "DELETE FROM etudiant";
+
+        try {
+            st = con.createStatement();
+            a = st.executeUpdate(req);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
 
         return a;
     }
@@ -118,10 +135,6 @@ public class EtudiantImp implements EtudiantDAO{
                     System.out.println("erreur:" + e.getMessage());
                 }
 
-    }
-
-    public void main(String[] args){
-    this.insertEtudiant(1,"hassan","mohamed",18);
     }
 }
 

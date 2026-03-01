@@ -12,7 +12,8 @@ import java.util.ArrayList;
 
 public class MyEtudiantTableModel extends AbstractTableModel {
     private final ResultSetMetaData rsmd;
-    private final ArrayList<Object[]> data = new ArrayList<>();
+    private final ArrayList<Object[]> allData = new ArrayList<>();
+    private ArrayList<Object[]> data = new ArrayList<>();
     private final EtudiantImp etudiantImp;
     Form form;
     public MyEtudiantTableModel(ResultSet rs, EtudiantImp etudiantImp, Form form) {
@@ -32,8 +33,9 @@ public class MyEtudiantTableModel extends AbstractTableModel {
                  for (int i = 0; i < getColumnCount(); i++) {
                      ligne[i] = rs.getObject(i+1);
                  }
-                 data.add(ligne);
+                 allData.add(ligne);
              }
+             data = new ArrayList<>(allData);
 
 
         } catch (SQLException e) {
@@ -92,12 +94,46 @@ public class MyEtudiantTableModel extends AbstractTableModel {
         String prenom = form.getPrenom().getText();
         double moyenne = Double.parseDouble(form.getMoyenne().getText());
 
-        form.getBtnEnregistrer().addActionListener(e -> {
-            etudiantImp.insertEtudiant(cin,nom,prenom,moyenne);
-        });
+        etudiantImp.insertEtudiant(cin, nom, prenom, moyenne);
 
+        Object[] row = new Object[]{cin, nom, prenom, moyenne};
+        allData.add(row);
+        data.add(row);
         fireTableDataChanged();
 
+    }
 
+    public void supprimerEtudiant(int rowIndex) {
+        Object[] row = data.get(rowIndex);
+        int cin = (int) row[0];
+        etudiantImp.deleteEtudiant(cin);
+        data.remove(rowIndex);
+        allData.remove(row);
+        fireTableRowsDeleted(rowIndex, rowIndex);
+    }
+
+    public void supprimerTousEtudiants() {
+        etudiantImp.deleteAllEtudiants();
+        data.clear();
+        allData.clear();
+        fireTableDataChanged();
+    }
+
+    public void rechercher(String searchText) {
+        String text = searchText.trim().toLowerCase();
+        if (text.isEmpty()) {
+            data = new ArrayList<>(allData);
+        } else {
+            data = new ArrayList<>();
+            for (Object[] row : allData) {
+                String cin = String.valueOf(row[0]).toLowerCase();
+                String nom = String.valueOf(row[1]).toLowerCase();
+                String prenom = String.valueOf(row[2]).toLowerCase();
+                if (cin.contains(text) || nom.contains(text) || prenom.contains(text)) {
+                    data.add(row);
+                }
+            }
+        }
+        fireTableDataChanged();
     }
 }
