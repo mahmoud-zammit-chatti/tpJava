@@ -17,7 +17,7 @@ public class Dashboard extends JFrame {
     MenuBar menuBar;
     ClockDesktopPane desktopPane;
     private final Timer clockTimer;
-    private boolean blinkColon = true;
+    private final Timer floatTimer;
 
     public Dashboard() {
         this.setTitle("Dashboard");
@@ -41,17 +41,20 @@ public class Dashboard extends JFrame {
         this.setContentPane(desktopPane);
 
         clockTimer = new Timer(1000, e -> {
-            blinkColon = !blinkColon;
             desktopPane.setClockText(formatClock(LocalTime.now()));
+            desktopPane.repaint();
+        });
+        floatTimer = new Timer(25, e -> {
+            desktopPane.advanceFloatPhase();
             desktopPane.repaint();
         });
         desktopPane.setClockText(formatClock(LocalTime.now()));
         clockTimer.start();
+        floatTimer.start();
     }
 
     private String formatClock(LocalTime now) {
-        String raw = now.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        return blinkColon ? raw : raw.replace(':', ' ');
+        return now.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
     }
     class EcouteurMenu implements ActionListener {
         public EcouteurMenu(){}
@@ -106,9 +109,17 @@ public class Dashboard extends JFrame {
 
     class ClockDesktopPane extends JDesktopPane {
         private String clockText = "00:00:00";
+        private double floatPhase = 0.0;
 
         void setClockText(String clockText) {
             this.clockText = clockText;
+        }
+
+        void advanceFloatPhase() {
+            floatPhase += 0.04;
+            if (floatPhase > Math.PI * 2) {
+                floatPhase -= Math.PI * 2;
+            }
         }
 
         @Override
@@ -122,122 +133,41 @@ public class Dashboard extends JFrame {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            GradientPaint bg = new GradientPaint(0, 0, new Color(8, 12, 16), 0, getHeight(), new Color(20, 26, 34));
+            GradientPaint bg = new GradientPaint(0, 0, new Color(240, 244, 248), 0, getHeight(), new Color(226, 232, 240));
             g2.setPaint(bg);
             g2.fillRect(0, 0, getWidth(), getHeight());
 
-            int panelWidth = Math.min(960, getWidth() - 120);
-            int panelHeight = 280;
-            int panelX = (getWidth() - panelWidth) / 2;
-            int panelY = (getHeight() - panelHeight) / 2;
+            int panelWidth = Math.min(780, getWidth() - 140);
+            int panelHeight = 210;
+            int basePanelX = (getWidth() - panelWidth) / 2;
+            int basePanelY = (getHeight() - panelHeight) / 2;
 
-            g2.setColor(new Color(18, 24, 32));
+            // Subtle floating movement for the home card.
+            int floatX = (int) Math.round(Math.sin(floatPhase * 1.35) * 36);
+            int floatY = (int) Math.round(Math.cos(floatPhase) * 24);
+            int panelX = Math.max(20, Math.min(getWidth() - panelWidth - 20, basePanelX + floatX));
+            int panelY = Math.max(20, Math.min(getHeight() - panelHeight - 20, basePanelY + floatY));
+
+            g2.setColor(new Color(255, 255, 255, 235));
             g2.fillRoundRect(panelX, panelY, panelWidth, panelHeight, 36, 36);
-            g2.setColor(new Color(58, 77, 98));
-            g2.setStroke(new BasicStroke(3f));
+            g2.setColor(new Color(186, 196, 210));
+            g2.setStroke(new BasicStroke(2f));
             g2.drawRoundRect(panelX, panelY, panelWidth, panelHeight, 36, 36);
 
-            drawSevenSegmentClock(g2, panelX + 36, panelY + 30, panelWidth - 72, panelHeight - 90);
+            g2.setColor(new Color(45, 55, 72));
+            g2.setFont(new Font("SansSerif", Font.BOLD, 84));
+            FontMetrics fm = g2.getFontMetrics();
+            int tx = panelX + (panelWidth - fm.stringWidth(clockText)) / 2;
+            int ty = panelY + (panelHeight + fm.getAscent()) / 2 - 18;
+            g2.drawString(clockText, tx, ty);
 
             g2.setFont(new Font("SansSerif", Font.PLAIN, 16));
-            String subtitle = "DIGITAL HOME CLOCK";
+            String subtitle = "Home Clock";
             int sx = panelX + (panelWidth - g2.getFontMetrics().stringWidth(subtitle)) / 2;
-            g2.setColor(new Color(127, 145, 166));
+            g2.setColor(new Color(90, 104, 124));
             g2.drawString(subtitle, sx, panelY + panelHeight - 22);
 
             g2.dispose();
-        }
-
-        private void drawSevenSegmentClock(Graphics2D g2, int x, int y, int width, int height) {
-            int[] slotUnits = {2, 2, 1, 2, 2, 1, 2, 2};
-            int totalUnits = 0;
-            for (int slotUnit : slotUnits) {
-                totalUnits += slotUnit;
-            }
-
-            int gap = Math.max(8, width / 140);
-            int usableWidth = width - gap * (slotUnits.length - 1);
-            int unitWidth = usableWidth / totalUnits;
-
-            int digitW = Math.max(42, unitWidth * 2);
-            int digitH = Math.max(110, height);
-            int colonW = Math.max(16, unitWidth);
-
-            int posX = x;
-            for (int i = 0; i < clockText.length() && i < 8; i++) {
-                char c = clockText.charAt(i);
-                if (Character.isDigit(c)) {
-                    drawDigit(g2, posX, y, digitW, digitH, c - '0');
-                    posX += digitW + gap;
-                } else {
-                    drawColon(g2, posX, y, colonW, digitH, c == ':');
-                    posX += colonW + gap;
-                }
-            }
-        }
-
-        private void drawColon(Graphics2D g2, int x, int y, int w, int h, boolean on) {
-            Color off = new Color(57, 120, 82, 70);
-            Color onColor = new Color(95, 255, 145);
-
-            int dotSize = Math.max(8, w / 2);
-            int cx = x + (w - dotSize) / 2;
-            int topY = y + h / 3 - dotSize / 2;
-            int botY = y + (2 * h) / 3 - dotSize / 2;
-
-            g2.setColor(on ? new Color(57, 255, 125, 45) : off);
-            g2.fillOval(cx - 2, topY - 2, dotSize + 4, dotSize + 4);
-            g2.fillOval(cx - 2, botY - 2, dotSize + 4, dotSize + 4);
-
-            g2.setColor(on ? onColor : off);
-            g2.fillOval(cx, topY, dotSize, dotSize);
-            g2.fillOval(cx, botY, dotSize, dotSize);
-        }
-
-        private void drawDigit(Graphics2D g2, int x, int y, int w, int h, int digit) {
-            boolean[][] digitMap = {
-                    {true, true, true, false, true, true, true},
-                    {false, false, true, false, false, true, false},
-                    {true, false, true, true, true, false, true},
-                    {true, false, true, true, false, true, true},
-                    {false, true, true, true, false, true, false},
-                    {true, true, false, true, false, true, true},
-                    {true, true, false, true, true, true, true},
-                    {true, false, true, false, false, true, false},
-                    {true, true, true, true, true, true, true},
-                    {true, true, true, true, false, true, true}
-            };
-
-            int t = Math.max(10, Math.min(w, h) / 8);
-            int midY = y + h / 2;
-
-            int[][] seg = {
-                    {x + t, y, w - 2 * t, t},
-                    {x, y + t, t, h / 2 - t},
-                    {x + w - t, y + t, t, h / 2 - t},
-                    {x + t, midY - t / 2, w - 2 * t, t},
-                    {x, midY + t / 2, t, h / 2 - t},
-                    {x + w - t, midY + t / 2, t, h / 2 - t},
-                    {x + t, y + h - t, w - 2 * t, t}
-            };
-
-            for (int i = 0; i < seg.length; i++) {
-                boolean on = digitMap[digit][i];
-                drawSegment(g2, seg[i][0], seg[i][1], seg[i][2], seg[i][3], on);
-            }
-        }
-
-        private void drawSegment(Graphics2D g2, int x, int y, int w, int h, boolean on) {
-            Color off = new Color(57, 120, 82, 70);
-            Color onColor = new Color(95, 255, 145);
-
-            if (on) {
-                g2.setColor(new Color(57, 255, 125, 40));
-                g2.fillRoundRect(x - 2, y - 2, w + 4, h + 4, h, h);
-            }
-
-            g2.setColor(on ? onColor : off);
-            g2.fillRoundRect(x, y, w, h, h, h);
         }
     }
 }
