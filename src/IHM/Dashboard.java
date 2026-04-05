@@ -18,6 +18,7 @@ public class Dashboard extends JFrame {
     ClockDesktopPane desktopPane;
     private final Timer clockTimer;
     private final Timer floatTimer;
+    private PrivateChatUI privateChatUI;
 
     public Dashboard() {
         this.setTitle("Dashboard");
@@ -29,13 +30,15 @@ public class Dashboard extends JFrame {
         menuBar = new MenuBar();
         this.setJMenuBar(menuBar);
 
-        menuBar.flow.addActionListener(new EcouteurMenu());
-        menuBar.border.addActionListener(new EcouteurMenu());
-        menuBar.grid.addActionListener(new EcouteurMenu());
-        menuBar.cv.addActionListener(new EcouteurMenu());
-        menuBar.gestion.addActionListener(new EcouteurMenu());
-        menuBar.etudiant.addActionListener(new EcouteurMenu());
-        menuBar.animation.addActionListener(new EcouteurMenu());
+        EcouteurMenu ecouteurMenu = new EcouteurMenu();
+        menuBar.flow.addActionListener(ecouteurMenu);
+        menuBar.border.addActionListener(ecouteurMenu);
+        menuBar.grid.addActionListener(ecouteurMenu);
+        menuBar.cv.addActionListener(ecouteurMenu);
+        menuBar.gestion.addActionListener(ecouteurMenu);
+        menuBar.etudiant.addActionListener(ecouteurMenu);
+        menuBar.animation.addActionListener(ecouteurMenu);
+        menuBar.privateChat.addActionListener(ecouteurMenu);
 
         desktopPane = new ClockDesktopPane();
         this.setContentPane(desktopPane);
@@ -104,7 +107,19 @@ public class Dashboard extends JFrame {
                 animationFrame.setSize(1100,800);
                 animationFrame.setVisible(true);
             }
+            if (e.getSource() == menuBar.privateChat) {
+                openPrivateChatUI();
+            }
         }
+    }
+
+    private void openPrivateChatUI() {
+        if (privateChatUI == null || !privateChatUI.isDisplayable()) {
+            privateChatUI = new PrivateChatUI();
+        }
+        privateChatUI.setVisible(true);
+        privateChatUI.toFront();
+        privateChatUI.requestFocus();
     }
 
     class ClockDesktopPane extends JDesktopPane {

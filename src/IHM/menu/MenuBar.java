@@ -4,7 +4,7 @@ import javax.swing.*;
 
 public class MenuBar extends JMenuBar {
     public Menu tp1, tp2, tp3, tp4;
-    public MenuItem flow, border, grid, cv, gestion, etudiant, animation;
+    public MenuItem flow, border, grid, cv, gestion, etudiant, animation, privateChat;
 
     public MenuBar() {
         super();
@@ -40,6 +40,8 @@ public class MenuBar extends JMenuBar {
 
         //tp4 items
         animation = new MenuItem("Animation");
+        privateChat = new MenuItem("Private Chat");
         tp4.add(animation);
+        tp4.add(privateChat);
     }
 }
